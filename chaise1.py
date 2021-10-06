@@ -35,11 +35,11 @@ legs(-0.25, -0.514, 3.681, -150.546, -0.155, 179.288, 'arriere_droit')
 legs(1.843, -0.514, 3.681, -29.455, 0.522, -0.919, 'arriere_gauche')
 legs(-0.004, -0.514, 0.491, 149.976, -9.602, 184.291, 'devant_droit')
 legs(1.503, -0.514, 0.491, 149.976, -9.602, 184.291, 'devant_gauche')
-seat(0.871, 4.142, 1.707, 'siege', 0)
-seat(0.871, 6.304, 3.155,'dossier',-84.776)
+seat(0.871, 4.142, 1.707, 'siege', 0) # siege de la chaise
+seat(0.871, 6.304, 3.155,'dossier',-84.776) # dossier de la chaise
 
 barreau(0.826, 1.102, 2.771, 1.05) # barreau arriere
 barreau(0.826, 1.102, 1.415, 0.76) # barreau de devant
 barreau(0.826, 3.968, 1.161, 1.05) # barreau sous le siege
-barreau(0.224, 4.846, 3.136, 0.81, 5.338, -0.146, 3.999)
-barreau(1.436, 4.846, 3.136, 0.81, 5.338, -0.146, -3.999)
+barreau(0.224, 4.846, 3.136, 0.81, 5.338, -0.146, 3.999) # barreau droit du dossier
+barreau(1.436, 4.846, 3.136, 0.81, 5.338, -0.146, -3.999) # barreau gauche du dossier
