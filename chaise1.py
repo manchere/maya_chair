@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+cmds.file(f = True, n = True)
 
 def legs(x, y, z, rotateX, rotateY, rotateZ, leg_name):
     cmds.polyCylinder(n= 'leg0%s' % leg_name, sx=20, sy=10, h=4.5, r=.15)
