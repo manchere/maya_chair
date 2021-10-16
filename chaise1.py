@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+cmds.file(f = True, n = True)
 
 cmds.file(new=True, force=True)
 
