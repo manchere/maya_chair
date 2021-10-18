@@ -2,13 +2,16 @@ import maya.cmds as cmds
 import math
 # On ne résout pas un grand problème avec une grosse solution, mais par une armée de petites solutions
 
+long_p = 4.5
+haute = 10
+LENGTH_FLOOR = 2.478
+
 cmds.file(new=True, force=True)
 
 # definition d'un pied de la chaise
 def legs(x, y, z, rotateX, rotateY, rotateZ, leg_name):
-    cmds.polyCylinder(n='leg%s' % leg_name, sx=20, sy=10, h=4.5, r=.15)
+    cmds.polyCylinder(n='leg%s' % leg_name, sx=20, sy=10, h=long_p, r=.15)
     cmds.select('leg%s.f[100:119]' % leg_name)
-    # cmds.move(0, 3, 0, 'leg%s' % leg_name) # unnnecessary for now
     cmds.polyExtrudeFacet( 'leg%s.f[0:19]' % leg_name, kft=True, ltz=.08)
     cmds.polyBevel('leg%s.f[0:19]' % leg_name, offset=0.035)
     cmds.select('leg%s.f[160:179]' % leg_name)
@@ -47,28 +50,10 @@ def barreau(x, y, z, scaleY, name, rotateX = 0, rotateY = 0, rotateZ = 90):
     cmds.scale(0.142, scaleY, 0.142)
     cmds.rotate(rotateX, rotateY, rotateZ)
 
-def supprimer_histoire():
+# supprimer l'historique
+def supprimer_histo():
     cmds.select(all = True)
     cmds.delete(constructionHistory = True)
-
-# def ajuster_pivot():
-#     cmds.move(0, 0, 0,  '.scalePivot', '.rotatePivot', absolute = True)
-
-def get_leg_rotate(leg_name):
-    angle = cmds.polyCylinder('leg%s' % leg_name, query = True, r = True)
-
-# obtenir le hauteur des pieds
-def get_leg_height(leg_name):
-    hypo = cmds.polyCylinder('leg%s' % leg_name, query = True, h = True)
-    return 
-
-
-def stretch(grpname, longueur, hauteur):
-    cmds.select(grpname)
-    cmds.scale(longueur, hauteur, xy = True)
-    math.sin()
-    cmds.move(0,h1 *2/2+hd+hd1/2,0)
-
 
 # Creation des pieds de la chaise
 legs(-1.039, 0, 0, -30, 0, 0, 'arriere_droit')
@@ -85,7 +70,7 @@ barreau(-0.6, 2.5, 1, 0.81, 'b_droit', 5, 0, 4) # barreau droit du dossier
 barreau(0.6, 2.5, 1, 0.81, 'b_gauche', 5, 0, -4)  # barreau gauche du dossier
 
 # #supprimer l'histoire
-supprimer_histoire()
+supprimer_histo()
 
 # grouper les parties de la chaise
 
@@ -104,8 +89,12 @@ cmds.group('back_legs', 'front_legs', n = 'full_legs')
 # groupe toute la chaise
 cmds.group('full_legs', 'back', n = 'chair')
 
+def get_height(longueur_pied, angle_prime): # longueur_pieds equivalent a l'hypotenuse
+    return longueur_pied * math.cos(math.radians(angle_prime))
 
-# cmds.move(0, 0, 0, 'chair')
-# ajuster_pivot()
-
-stretch('full_legs', 1, 5)
+height = 3
+width = 1
+cmds.scale(width, height, 1, 'full_legs')
+cmds.scale(width, 1, 1, 'back')
+cmds.move(0, get_height(height * long_p, 30) * 0.5, 0, 'full_legs')
+cmds.move(0, get_height(height * long_p, 30) * 0.5 + get_height(long_p * height, 30), 0, 'back')
