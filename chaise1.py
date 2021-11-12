@@ -1,46 +1,37 @@
-#\ -*- coding: utf-8 -*-
 import math
 import maya.cmds as cmds
 
 class Chair:
-    def __init__(self, long_h):
-        self.Window = 'Chair'
-        self.Height = long_h
-
-        if cmds.window(self.Window, exists=True):
-            cmds.delete(self.Window, window=True)
-
     # definition d'un pied de la chaise
-    def legs(self, x, y, z, rotateX, rotateY, rotateZ, leg_name):
-        cmds.polyCylinder(n='leg%s' % leg_name, sx=20, sy=10, h=self.Height, r=.15)
+    # x, y, z, rotateX, rotateY, rotateZ,
+    def legs(self, leg_name, ht=4.5):
+        cmds.polyCylinder(n='leg%s' % leg_name, sx=20, sy=10, h=ht, r=.15)
         cmds.polyExtrudeFacet( 'leg%s.f[0:19]' % leg_name, kft=True, ltz=.08)
         cmds.polyBevel('leg%s.f[0:19]' % leg_name, offset=0.035)
         cmds.select('leg%s.f[160:179]' % leg_name)
         cmds.scale(0.37,1,1)
-        cmds.polyUnite(self.chair_ring(leg_name), 'leg%s' % leg_name, n='n_leg%s' % leg_name)
-        self.leg_position(x, y, z, rotateX, rotateY, rotateZ)
-
-    # positionement d'un pied
-    def leg_position(self, x, y, z, rotateX, rotateY, rotateZ):
-        cmds.move(x, y, z)
-        cmds.rotate(rotateX, rotateY, rotateZ)
-
-    # definition d'un anneau pour un pied
-    def chair_ring(self, leg_name):
         cmds.polyTorus(n = 'knot%s' % leg_name, sr=0.4132, sx=20, sy=20, ch=1)
         cmds.scale(0.162, 0.162, 0.162, 'knot%s' % leg_name)
         cmds.rotate(0,0,90,'knot%s' % leg_name)
         cmds.move(0, 2.138, 0,'knot%s' % leg_name)
+        cmds.polyUnite('knot%s' % leg_name, 'leg%s' % leg_name, n='n_leg%s' % leg_name)
+        # self.set_leg_pos(x, y, z, rotateX, rotateY, rotateZ)
 
-        return 'knot %s' % leg_name
+    # positionement d'un pied
+    def set_leg_pos(self, x, y, z, rotateX, rotateY, rotateZ):
+        cmds.move(x, y, z)
+        cmds.rotate(rotateX, rotateY, rotateZ)
 
     # definition du siege de la chaise
-    def seat(self, x, y, z, sname, rotation):
-        cmds.polySphere(n = 'sphere%s' % sname, sx=40, sy=15, r=0.95)
+    def seat(self, sname, height=40, width=15, depth=40):
+        cmds.polySphere(axis=[width, height, depth],n = 'sphere%s' % sname, sx=40, sy=15, r=.95)
         cmds.scale(1.451, 0.214, 1.451, 'sphere%s' % sname)
         cmds.polyTorus(n = 'circlemetal%s' % sname, sr=0.032, sx=30, sy=20, r=0.45, ch=1)
         cmds.scale(3.221, 3.221, 3.221, 'circlemetal%s' % sname)
         cmds.polyUnite('sphere%s' % sname, 'circlemetal%s' % sname, n='full%s' % sname)
+
+    # definition de la position du siege
+    def set_seat_pos(self, x, y, z, rotation):
         cmds.move(x, y, z)
         cmds.rotate(rotation, 0, 0)
 
@@ -51,132 +42,184 @@ class Chair:
         cmds.scale(0.142, scaleY, 0.142)
         cmds.rotate(rotateX, rotateY, rotateZ)
 
+    def get_height(self, longueur_pied, angle_prime): # longueur_pieds equivalent a l'hypotenuse
+        return longueur_pied * math.cos(math.radians(angle_prime))
+
+    def rotate_leg(self, objname, val):
+        cmds.setAttr(objname+'.rotateX',val)
+
+    def move_leg(self, objname, axis, val):
+        cmds.setAttr(objname+'.translate'+axis.upper(), val)
+
+    def set_chair_to_o():
+        cmds.xform()
+
+
+    def grp_all(self):
+        cmds.group(w=True)
+
+    # def pos_legs_vert():
+    #     if make_check_box():
+    #         return [-1.295, 0.54]
+    #     else:
+    #         return [-0.43, 0]
+
     # supprimer l'historique
     def supprimer_histo(self):
         cmds.select(all = True)
         cmds.delete(constructionHistory = True)
 
-
-    def get_height(self, longueur_pied, angle_prime): # longueur_pieds equivalent a l'hypotenuse
-        return longueur_pied * math.cos(math.radians(angle_prime))
-
 # -------------------------------------------------------------------------------------------
+class UI:
+    def __init__(self, name):
+        self.Window = name
 
-def create_btn():
-    cmds.button(label='creer', command='btn_create_chair()')
+        if cmds.window(self.Window, exists=True):
+            cmds.deleteUI(self.Window, window=True)
 
-def suppr_btn():
-    cmds.button(label='supprimer', command="cmds.delete()" )
-   
-def slider(sld_name, lbl_name):
-    return cmds.floatSliderGrp(sld_name, label=lbl_name, field = True, minValue =1.0, maxValue =10.0, value = 1)
+        my_win = cmds.window(title=self.Window, widthHeight=(300, 200))
 
-def get_slider(sld_name):
-    return cmds.floatSliderGrp(sld_name, query=True, value=True)
+        cmds.columnLayout(adjustableColumn=True)
 
-def option_menu():
-    cmds.optionMenu( label='Colors', changeCommand='' )
-    cmds.menuItem( label='Yellow' )
-    cmds.menuItem( label='Purple' )
-    cmds.menuItem( label='Orange' )
+        cmds.showWindow(my_win)
 
-# def get_opt_menu():
-#     return 
+    def make_btn(self, btn_name, btn_lbl, btnCmd):
+        cmds.button(btn_name,label=btn_lbl, command=btnCmd)
 
-def toggle_long_pied(value):
-    cmds.floatSliderGrp('long', edit=True, enable=value)
+    def make_slider(self, sld_name, lbl_name):
+        return cmds.floatSliderGrp(sld_name, label=lbl_name, field=True, minValue =4.5, maxValue =10.0, value = 4.5)
 
-def pos_legs_vert():
-    if get_check_box():
-        return [-1.295, 0.54]
-    else:
-        return [-0.43, 0]
+    def get_slider(self, sld_name):
+        return cmds.floatSliderGrp(sld_name, query=True, value=True)
 
-def create_shader(name, node_type="lambert"):
-    mtl = cmds.shadingNode(node_type, name=name, asShader=True)
-    sg = cmds.sets(name="%sSG" % name, empty=True, renderable=True, noSurfaceShader=True)
-    cmds.connectAttr("%s.outColor" % mtl, "%s.surfaceShader" % sg)
-    return mtl, sg
+    def make_optmenu(self, optMenName, optMenLbl, menuItems):
+        cmds.optionMenu(optMenName, label=optMenLbl)
+        for item in menuItems:
+            cmds.menuItem(item)
 
-def set_color(colors):
-    shader_color = colors
-    meshes = cmds.ls(selection=True, dag=True, type="mesh", noIntermediate=True)
-    material, sgrp = create_shader("siege_MTL", 'blinn')
-    cmds.setAttr(material + ".color", shader_color[0], shader_color[1], shader_color[2], type="double3")
-    cmds.sets(meshes, forceElement=sgrp)
+    def set_optmenu(self, optname, createColor):
+        cmds.optionMenu(optname, e=True, changeCommand=createColor)
 
-def is_vertical(val):
-    return 0 if val else 30
+    def get_optmenu_item(self, optname):
+         return cmds.optionMenu(optname, q=True, v=True)
 
-# def is_checked():
-#     if cmds.checkBox()
+    def make_checkbox(self, chk_name, chk_lbl):
+        cmds.checkBox(chk_name, label=chk_lbl, onCommand=self.__lock_haut_pied)
 
-def get_check_box():
-    return cmds.checkBox('verti_check', q=True, v=True)
+    def get_checkbox(self, chk_name):
+        return cmds.checkBox(chk_name, q=True, v=True)
 
-def btn_create_chair():
-    chair = Chair(get_slider('long'))
 
-    chair.legs(-1.039, 0, pos_legs_vert()[1], -(is_vertical(get_check_box())), 0, 0, 'arriere_droit')#neg
-    chair.legs(1.039, 0, pos_legs_vert()[1], -(is_vertical(get_check_box())), 0, 0, 'arriere_gauche')
-    chair.legs(0.75, 0, pos_legs_vert()[0], is_vertical(get_check_box()), 0, 0, 'devant_droit')#pos
-    chair.legs(-0.75, 0, pos_legs_vert()[0], is_vertical(get_check_box()), 0, 0, 'devant_gauche')
-    chair.seat(0, 2.075, -0.38, 'siege', 0) # siege de la chaise
-    chair.seat(0, 4.15, 1,'dossier',-84.776) # dossier de la chaise
-    chair.barreau(0, -0.92,  pos_legs_vert()[1], 1.05,'b_arriere') # barreau arriere 0.536
-    chair.barreau(0, -0.92, pos_legs_vert()[0], 0.76, 'b_devant') # barreau de devant -0.967
+    def make_separator(self, ht):
+        cmds.separator(height = ht, style='out')
+
+    def __lock_haut_pied(self, value):
+        cmds.floatSliderGrp('sliderHautChaise', e=True, enable=value)
+
+class Shader:
+    def __init__(self, node_t):
+        self.NodeType=node_t
+
+    def __create_shader(self, naming, node_type):
+        node_type = self.NodeType
+        mtl = cmds.shadingNode(node_type, name=naming, asShader=True)
+        sg = cmds.sets(name="%sSG" % naming, empty=True, renderable=True, noSurfaceShader=True)
+        cmds.connectAttr("%s.outColor" % mtl, "%s.surfaceShader" % sg)
+        return mtl, sg
+
+    def set_color(self, key_color, shader_colors):
+        meshes = cmds.ls(selection=True, dag=True, type="mesh", noIntermediate=True)
+        material, sgrp = self.__create_shader("siege_MTL", 'blinn')
+        cmds.setAttr(material + ".color", shader_colors[key_color][0], shader_colors[key_color][1], shader_colors[key_color][2], type='double3')
+        cmds.sets(meshes, forceElement=sgrp)
+
+colorScheme = {
+    'yellow': [255,255,0],
+    'blue': [0,0,255],
+    'red': [255, 0, 0],
+    'purple': [255,0,255],
+    'green': [0, 255, 0]
+}
+
+user = UI('Chaise')
+user.make_btn('btn_chaise', 'Creer Chaise', 'chaise()')
+
+user.make_slider('sliderHautChaise','hauteur pied')
+hLegs = user.get_slider('sliderHautChaise')
+
+user.make_slider('sliderLargeSiege','largeur siege')
+wSeat = user.get_slider('sliderLargeSiege')
+
+user.make_slider('sliderProfondSiege', 'profondeur siege')
+dSeat = user.get_slider('sliderProfondSiege')
+
+user.make_slider('sliderHautDoss', 'Hauteur dossier')
+hBack = user.get_slider('sliderHautDoss')
+
+user.make_slider('sliderLargeDoss', 'largeur dossier')
+wBack = user.get_slider('sliderLargeDoss')
+
+user.make_separator(5)
+user.make_checkbox('verti_check','Pied Vertical')
+
+shade = Shader('blinn')
+user.make_optmenu('optSetColor', 'Colors', colorScheme.keys())
+colorFunc = lambda x: shade.set_color(user.get_optmenu_item('optSetColor'), colorScheme)
+user.set_optmenu('optSetColor', colorFunc)
+user.make_btn('btn_suppr', 'Supprimer Chaise', 'cmds.delete()')
+
+# cmds.move(0, chair.Height + hAssise/2, 0,)
+def chaise():
+    chair = Chair()
+    chair.legs('arriere_droit', hLegs)#neg
+    chair.set_leg_pos(-1.039, 0, 0, -30, 0, 0,)
+
+    chair.legs('arriere_gauche',hLegs)
+    chair.set_leg_pos(1.039, 0, 0, -30, 0, 0)
+
+    chair.legs('devant_droit', hLegs)#pos
+    chair.set_leg_pos(0.75, 0, -0.43, 30, 0, 0)
+
+    chair.legs('devant_gauche', hLegs)
+    chair.set_leg_pos(-0.75, 0, -0.43, 30, 0, 0)
+
+    chair.seat('siege',wSeat, dSeat) # siege de la chaise
+    chair.set_seat_pos(0, 2.075, -0.38, 0)
+
+    chair.seat('dossier',wBack, hBack) # dossier de la chaise
+    chair.set_seat_pos(0, 4.15, 1, -84.776)
+
+    chair.barreau(0, -0.92,  0.536, 1.05,'b_arriere') # barreau arriere 0.536
+    chair.barreau(0, -0.92, -0.967, 0.76, 'b_devant') # barreau de devant -0.967
     chair.barreau(0, 1.851, 0.631, 0.7, 'sous_siege') # barreau sous le siege
     chair.barreau(-0.6, 2.5, 1, 0.81, 'b_droit', 5, 0, 4) # barreau droit du dossier
     chair.barreau(0.6, 2.5, 1, 0.81, 'b_gauche', 5, 0, -4)  # barreau gauche du dossier
     chair.supprimer_histo()
-    set_color([0, 23, 2])
+    chair.grp_all()
 
-    # groupe pied arriere de la chaise
-    cmds.group('n_legarriere_droit', 'n_legarriere_gauche', 'b_arriere',  'sous_siege', n = 'front_legs')
 
-    # groupe pied devant de la chaise
-    cmds.group('n_legdevant_droit', 'n_legdevant_gauche', 'b_devant',n = 'back_legs')
 
-    # groupe dossier/siege de la chaise
-    cmds.group('b_droit', 'b_gauche', 'fulldossier', 'fullsiege', n = 'back')
 
-    # groupe tous les pieds de la chaise
-    cmds.group('back_legs', 'front_legs', n = 'full_legs')
+# def chaise2():
+#     chair = Chair()
+#     chair.legs('arriere_droit', hLegs)#neg
+#     chair.set_leg_pos(-1.039, 0, 0, -30, 0, 0,)
 
-    # groupe toute la chaise
-    cmds.group('full_legs', 'back', n = 'chair')
+#     chair.legs('arriere_gauche',hLegs)
+#     chair.set_leg_pos(1.039, 0, 0, -30, 0, 0)
 
-    # cmds.move('chair', chair.Height/2, -ass/2.5, pied1)
-    # cmds.move(Height/2.5, arr/2, ass/2.5, pied2)
-    # cmds.move(-Height/2.5, hPiedAvant/2, -ass/2.5, pied3)
-    # cmds.move(-Height/2.5, arr/2, ass/2.5, pied4)
-    
-    # cmds.move(Height/2.5, arr/3, 0, EntrP1)
-    # cmds.move(-Height/2.5, arr/3, 0, EntrP2)
-    # cmds.move(0, arr/3, ass/2.5, EntrP3)
-    # cmds.move(0, arr/3, -ass/2.5, EntrP4)
-    
-    # cmds.move(0, arr, 0, assise)
-    
-    # cmds.move(Height/2.5, hPiedAvant, 0, Acc1)
-    # cmds.move(-Height/2.5, hPiedAvant, 0, Acc2)
-    
-    # u = (hDossier/2) * math.sin(math.radians(rxD))
-    # cmds.move( 0, arr + hDossier/2, (ass/2.0) + u/2, Dossier)
-    
-# cmds.move(0, chair.Height + hAssise/2, 0,)
+#     chair.legs('devant_droit', hLegs)#pos
+#     chair.set_leg_pos(0.75, 0, -0.43, 30, 0, 0)
 
-def show_ui():
-    my_win = cmds.window(title="Chaise Configuration", widthHeight=(300, 200))
-    cmds.columnLayout(adjustableColumn=True)
-    suppr_btn()
-    slider('large','largeur siege')
-    slider('long','longueur pied')
-    cmds.checkBox('verti_check', label ='Pied Vertical', changeCommand=toggle_long_pied, value=True)
-    option_menu()
-    cmds.separator(height = 20)
-    create_btn()
+#     chair.legs('devant_gauche', hLegs)
+#     chair.set_leg_pos(-0.75, 0, -0.43, 30, 0, 0)
 
-    cmds.showWindow(my_win)
-
-show_ui()
+#     chair.seat(wSeat, 2.075, dSeat, 'siege', 0) # siege de la chaise
+#     chair.seat(wBack, hBack, 1,'dossier',-84.776) # dossier de la chaise
+#     chair.barreau(0, -0.92,  0.536, 1.05,'b_arriere') # barreau arriere 0.536
+#     chair.barreau(0, -0.92, -0.967, 0.76, 'b_devant') # barreau de devant -0.967
+#     chair.barreau(0, 1.851, 0.631, 0.7, 'sous_siege') # barreau sous le siege
+#     chair.barreau(-0.6, 2.5, 1, 0.81, 'b_droit', 5, 0, 4) # barreau droit du dossier
+#     chair.barreau(0.6, 2.5, 1, 0.81, 'b_gauche', 5, 0, -4)  # barreau gauche du dossier
+#     chair.supprimer_histo()
+#     chair.grp_all()
