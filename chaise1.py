@@ -19,12 +19,14 @@ class Chair:
 
     # positionement d'un pied
     def set_leg_pos(self, x, y, z, rotateX, rotateY, rotateZ):
+        # connaitre la position d'un vertex
+        #posV = cmds.xform("pSphere1.vtx[100]",q=True,t=True)
         cmds.move(x, y, z)
         cmds.rotate(rotateX, rotateY, rotateZ)
 
     # definition du siege de la chaise
     def seat(self, sname, height=40, width=15, depth=40):
-        cmds.polySphere(axis=[width, height, depth],n = 'sphere%s' % sname, sx=40, sy=15, r=.95)
+        cmds.polySphere(n = 'sphere%s' % sname, sx=40, sy=15, r=1)
         cmds.scale(1.451, 0.214, 1.451, 'sphere%s' % sname)
         cmds.polyTorus(n = 'circlemetal%s' % sname, sr=0.032, sx=30, sy=20, r=0.45, ch=1)
         cmds.scale(3.221, 3.221, 3.221, 'circlemetal%s' % sname)
@@ -129,7 +131,7 @@ class Shader:
 
     def set_color(self, key_color, shader_colors):
         meshes = cmds.ls(selection=True, dag=True, type="mesh", noIntermediate=True)
-        material, sgrp = self.__create_shader("siege_MTL", 'blinn')
+        material, sgrp = self.__create_shader("siege_MTL", self.NodeType)
         cmds.setAttr(material + ".color", shader_colors[key_color][0], shader_colors[key_color][1], shader_colors[key_color][2], type='double3')
         cmds.sets(meshes, forceElement=sgrp)
 
@@ -143,22 +145,11 @@ colorScheme = {
 
 user = UI('Chaise')
 user.make_btn('btn_chaise', 'Creer Chaise', 'chaise()')
-
 user.make_slider('sliderHautChaise','hauteur pied')
-hLegs = user.get_slider('sliderHautChaise')
-
 user.make_slider('sliderLargeSiege','largeur siege')
-wSeat = user.get_slider('sliderLargeSiege')
-
 user.make_slider('sliderProfondSiege', 'profondeur siege')
-dSeat = user.get_slider('sliderProfondSiege')
-
 user.make_slider('sliderHautDoss', 'Hauteur dossier')
-hBack = user.get_slider('sliderHautDoss')
-
 user.make_slider('sliderLargeDoss', 'largeur dossier')
-wBack = user.get_slider('sliderLargeDoss')
-
 user.make_separator(5)
 user.make_checkbox('verti_check','Pied Vertical')
 
@@ -171,8 +162,11 @@ user.make_btn('btn_suppr', 'Supprimer Chaise', 'cmds.delete()')
 # cmds.move(0, chair.Height + hAssise/2, 0,)
 def chaise():
     chair = Chair()
+
+    hLegs = user.get_slider('sliderHautChaise')
+
     chair.legs('arriere_droit', hLegs)#neg
-    chair.set_leg_pos(-1.039, 0, 0, -30, 0, 0,)
+    chair.set_leg_pos(-1.039, 0, 0, -30, 0, 0)
 
     chair.legs('arriere_gauche',hLegs)
     chair.set_leg_pos(1.039, 0, 0, -30, 0, 0)
@@ -183,8 +177,13 @@ def chaise():
     chair.legs('devant_gauche', hLegs)
     chair.set_leg_pos(-0.75, 0, -0.43, 30, 0, 0)
 
+    wSeat = user.get_slider('sliderLargeSiege')
+
     chair.seat('siege',wSeat, dSeat) # siege de la chaise
     chair.set_seat_pos(0, 2.075, -0.38, 0)
+
+    hBack = user.get_slider('sliderHautDoss')
+    wBack = user.get_slider('sliderLargeDoss')
 
     chair.seat('dossier',wBack, hBack) # dossier de la chaise
     chair.set_seat_pos(0, 4.15, 1, -84.776)
